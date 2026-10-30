@@ -3,11 +3,12 @@
   "apps": [
     {
       "name": "Desktop (Monitor Principal)",
+      "output": "\\\\.\\DISPLAY1",
       "image-path": "desktop.png"
     },
     {
-      "name": "Coop Tela Cheia (Monitor 2)",
-      "output": "\\\\.\\DISPLAY2",
+      "name": "Coop Tela Cheia (Monitor Virtual)",
+      "output": "\\\\.\\DISPLAY5",
       "prep-cmd": [
         {
           "do": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\Bruno\\coop-games\\scripts\\toggle_virtual_monitor.ps1\" -Action enable",

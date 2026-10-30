@@ -1,49 +1,47 @@
-# Guia do Ambiente Coop Remoto (Sunshine + Moonlight + Tailscale + Nucleus Co-op)
+# Guia Completo: Ambiente Coop Remoto com Tela Dividida Isolada (Monitor Virtual)
 
-Este repositorio documenta e armazena os scripts de automacao e configuracao para jogar qualquer game cooperativo a distancia como se fosse em rede local, com baixissima latencia.
-
----
-
-## 1. Arquitetura da Solucao
-
-1. **Rede:** [Tailscale](https://tailscale.com/) cria uma rede mesh WireGuard criptografada ponto a ponto (P2P), furando CGNAT sem necessidade de abrir portas no roteador.
-2. **Streaming Host:** [Sunshine](https://github.com/LizardByte/Sunshine) roda no PC Host (Windows) como servico nativo, utilizando codificacao de hardware via NVENC (NVIDIA RTX 3060).
-3. **Cliente Remoto:** [Moonlight](https://moonlight-stream.org/) roda no dispositivo do Player 2 (PC, Celular Android/iOS, Steam Deck, TV Box).
-4. **Controles Virtuais:** [ViGEmBus](https://github.com/nefarius/ViGEmBus) emula os controles do Moonlight como gamepads Xbox 360 nativos no Windows.
-5. **Multi-Tela Virtual:** [Virtual Display Driver (VDD)](https://github.com/VirtualDrivers/Virtual-Display-Driver) cria um segundo monitor virtual sob demanda (1080p@60Hz / 120Hz).
-6. **Multi-Instancias Coop:** [Nucleus Co-op](https://nucleus-coop.github.io/) roda instâncias isoladas de jogos para cada jogador, posicionando o Player 1 no monitor fisico e o Player 2 no monitor virtual.
+Este repositório documenta a infraestrutura completa para rodar jogos cooperativos à distância como se fossem locais, permitindo tanto o modo split-screen clássico quanto o modo **telas cheias independentes para cada jogador**.
 
 ---
 
-## 2. Modos de Jogo Disponiveis no Moonlight
+## 1. Arquitetura
 
-No aplicativo do Moonlight do Player 2, aparecem duas opcoes de conexao:
-
-### Modo A: `Desktop / Jogo Padrao (Split-Screen Unico)`
-* **Ideal para:** Jogos narrativos ou desenhados para split-screen unificado (*A Way Out*, *It Takes Two*, jogos emulados).
-* **Comportamento:** Espelha o monitor principal (`\\.\DISPLAY1`).
-
-### Modo B: `Coop Tela Cheia (Monitor 2 Dedicado)`
-* **Ideal para:** Jogos de tiro, corrida, RPG e acao onde cada um deve ver apenas a sua propria camera em tela cheia (*Borderlands*, *Left 4 Dead 2*, *Call of Duty*, *Resident Evil*, etc.).
-* **Comportamento:**
-  * Liga o Monitor Virtual automaticamente ao iniciar.
-  * O Sunshine transmite **apenas a tela virtual** para o Player 2.
-  * O Nucleus Co-op joga o Player 1 na tela fisica e o Player 2 na tela virtual.
-  * Ao encerrar o streaming, o monitor virtual desliga automaticamente.
+1. **Rede Mesh P2P:** [Tailscale](https://tailscale.com/) cria uma VPN segura WireGuard direta entre as máquinas/celulares, contornando CGNAT sem abrir portas.
+2. **Streaming Host:** [Sunshine](https://github.com/LizardByte/Sunshine) roda no Windows com aceleração de hardware NVENC (RTX 3060).
+3. **Cliente Remoto:** [Moonlight](https://moonlight-stream.org/) roda no celular ou PC do Player 2.
+4. **Controles Virtuais:** [ViGEmBus](https://github.com/nefarius/ViGEmBus) cria controles Xbox 360 virtuais para o Player 2.
+5. **Monitor Virtual:** [Virtual Display Driver (VDD x64)](https://github.com/VirtualDrivers/Virtual-Display-Driver) cria um segundo monitor virtual sob demanda (`\\.\DISPLAY5`).
+6. **Multi-Instâncias:** [Nucleus Co-op](https://nucleus-coop.github.io/) roda instâncias isoladas de jogos para cada jogador (Player 1 no monitor físico e Player 2 no monitor virtual).
 
 ---
 
-## 3. Passo a Passo de Reinstalacao em Outro PC
+## 2. Como Reinstalar Tudo do Zero em Qualquer PC
 
-1. **Instalar Tailscale:**
-   * Baixar e logar com a conta Tailscale.
-   * Compartilhar a maquina com o Player 2 ou adiciona-lo na tailnet.
-2. **Instalar Sunshine & ViGEmBus:**
-   * Instalar o Sunshine para Windows.
-   * O instalador instala o driver de controle `ViGEmBus` automaticamente.
-3. **Instalar o Driver de Monitor Virtual (VDD):**
-   * Executar como Administrador o script: `scripts/install_driver.bat`.
-4. **Instalar Nucleus Co-op:**
-   * Extrair ou instalar o instalador em `C:\NucleusCo-op`.
-5. **Configurar o Sunshine (`apps.json`):**
-   * Adicionar as entradas presentes em `configs/sunshine_apps.json`.
+### Passo 1: Drivers e Rede
+1. Instale o **Tailscale** e autentique na conta.
+2. Instale o **Sunshine** (o instalador já instala o driver de controle ViGEmBus por padrão).
+
+### Passo 2: Instalação Obrigatória do Monitor Virtual (Hardware Legado)
+> **IMPORTANTE:** Drivers de vídeo virtuais (.inf) requerem o assistente de hardware do Windows para criar o nó raiz no sistema:
+1. Pressione `Windows + R`, digite `hdwwiz` e pressione `Enter`.
+2. Clique em **Avançar** ➔ Selecione **"Instalar o hardware que eu selecionar manualmente em uma lista (Avançado)"**.
+3. Selecione **Adaptadores de vídeo** (Display adapters) e clique em **Avançar**.
+4. Clique no botão **Com disco... (Have Disk)** e aponte para:
+   ```text
+   C:\VirtualDisplayDriver\VirtualDisplayDriver\MttVDD.inf
+   ```
+5. Confirme e conclua a instalação. O monitor virtual aparecerá no Gerenciador de Dispositivos e no menu de telas do Windows.
+
+### Passo 3: Nucleus Co-op
+1. O Nucleus Co-op não deve ficar no Desktop ou em pastas protegidas.
+2. Extraia o pacote oficial em:
+   ```text
+   C:\NucleusCo-op\NucleusCoop.exe
+   ```
+
+### Passo 4: Configurar Perfis no Sunshine (`apps.json`)
+O Sunshine expõe duas opções para o Moonlight:
+* **"Desktop (Monitor Principal)"**: Transmite a tela física `\\.\DISPLAY1` (ideal para jogos com split-screen unificado como *A Way Out*).
+* **"Coop Tela Cheia (Monitor Virtual)"**: Transmite a tela virtual `\\.\DISPLAY5` (ideal para *Borderlands, Left 4 Dead 2, Resident Evil, etc.* via Nucleus Co-op).
+
+Execute o script `scripts/apply_sunshine_config.bat` como Administrador para aplicar as rotas de tela no Sunshine.
