@@ -1,0 +1,9 @@
+[30/10/2026 16:59:55] System.TypeInitializationException: O inicializador de tipo de 'Nucleus.Gaming.UI.Theme_Settings' acionou uma exceção. ---> System.FormatException: A cadeia de caracteres de entrada não estava em um formato correto.
+   em System.Number.ParseSingle(String value, NumberStyles options, NumberFormatInfo numfmt)
+   em System.Single.Parse(String s)
+   em Nucleus.Gaming.UI.Theme_Settings..cctor()
+   --- Fim do rastreamento de pilha de exceções internas ---
+   em Nucleus.Coop.UI.UI_Interface.set_MainForm(MainForm value)
+   em Nucleus.Coop.MainForm..ctor(String[] args)
+   em Nucleus.Coop.Program.RunApplication(String[] args)
+   em Nucleus.Coop.Program.Main(String[] args)
