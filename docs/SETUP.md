@@ -2,11 +2,15 @@
 
 Este repositório documenta a infraestrutura completa para rodar jogos cooperativos à distância como se fossem locais, permitindo tanto o modo split-screen clássico quanto o modo **telas cheias independentes para cada jogador**.
 
+> [!NOTE]
+> **Instruções para Agentes de IA / Automações:**
+> Este documento foi estruturado para que você (ou outro agente de IA) possa reproduzir e automatizar toda essa instalação em outro PC Windows sem intervenção manual desnecessária.
+
 ---
 
-## 1. Arquitetura
+## 1. Arquitetura da Solução
 
-1. **Rede Mesh P2P:** [Tailscale](https://tailscale.com/) cria uma VPN segura WireGuard direta entre as máquinas/celulares, contornando CGNAT sem abrir portas.
+1. **Rede Mesh P2P:** [Tailscale](https://tailscale.com/) cria uma VPN segura WireGuard direta entre as máquinas/celulares, contornando CGNAT sem abrir portas no roteador.
 2. **Streaming Host:** [Sunshine](https://github.com/LizardByte/Sunshine) roda no Windows com aceleração de hardware NVENC (RTX 3060).
 3. **Cliente Remoto:** [Moonlight](https://moonlight-stream.org/) roda no celular ou PC do Player 2.
 4. **Controles Virtuais:** [ViGEmBus](https://github.com/nefarius/ViGEmBus) cria controles Xbox 360 virtuais para o Player 2.
@@ -15,33 +19,81 @@ Este repositório documenta a infraestrutura completa para rodar jogos cooperati
 
 ---
 
-## 2. Como Reinstalar Tudo do Zero em Qualquer PC
+## 2. Como a IA deve Instalar o Nucleus Co-op (Automação Silenciosa)
 
-### Passo 1: Drivers e Rede
-1. Instale o **Tailscale** e autentique na conta.
-2. Instale o **Sunshine** (o instalador já instala o driver de controle ViGEmBus por padrão).
+> [!WARNING]
+> **NÃO utilize o `Installer.exe` do Nucleus Co-op.** Ele possui um bug conhecido que tenta baixar arquivos em segundo plano e trava infinitamente numa tela cinza.
 
-### Passo 2: Instalação Obrigatória do Monitor Virtual (Hardware Legado)
-> **IMPORTANTE:** Drivers de vídeo virtuais (.inf) requerem o assistente de hardware do Windows para criar o nó raiz no sistema:
-1. Pressione `Windows + R`, digite `hdwwiz` e pressione `Enter`.
-2. Clique em **Avançar** ➔ Selecione **"Instalar o hardware que eu selecionar manualmente em uma lista (Avançado)"**.
-3. Selecione **Adaptadores de vídeo** (Display adapters) e clique em **Avançar**.
-4. Clique no botão **Com disco... (Have Disk)** e aponte para:
-   ```text
-   C:\VirtualDisplayDriver\VirtualDisplayDriver\MttVDD.inf
+### O procedimento correto que deve ser executado via script/CLI:
+1. **Baixar o arquivo completo `NucleusApp.zip`** da release oficial no GitHub:
+   ```powershell
+   $url = "https://github.com/SplitScreen-Me/splitscreenme-nucleus/releases/download/v2.4.2/NucleusApp.zip"
+   Invoke-WebRequest -Uri $url -OutFile "$env:TEMP\NucleusApp.zip"
    ```
-5. Confirme e conclua a instalação. O monitor virtual aparecerá no Gerenciador de Dispositivos e no menu de telas do Windows.
+2. **Atenção à senha do arquivo ZIP:** O pacote do Nucleus Co-op possui senha de descompactação:
+   * Senha oficial: `nucleus`
+3. **Descompactação via 7-Zip CLI (standalone):**
+   * O utilitário nativo `Expand-Archive` do Windows falha por causa do método de compressão e da senha.
+   * Utilize o `7za.exe` (ou o binário presente em `scripts/7z/x64/7za.exe` deste repositório) apontando para a raiz `C:\NucleusCo-op`:
+   ```powershell
+   & "scripts\7z\x64\7za.exe" x "$env:TEMP\NucleusApp.zip" -o"C:\NucleusCo-op" -pnucleus -y
+   ```
+4. **Criar atalho na Área de Trabalho do usuário:**
+   * Crie o atalho apontando para `C:\NucleusCo-op\NucleusCoop.exe` no caminho real do Desktop (atentar se o usuário usa OneDrive: `OneDrive\Área de Trabalho`).
 
-### Passo 3: Nucleus Co-op
-1. O Nucleus Co-op não deve ficar no Desktop ou em pastas protegidas.
-2. Extraia o pacote oficial em:
-   ```text
-   C:\NucleusCo-op\NucleusCoop.exe
+---
+
+## 3. Instalação do Driver de Monitor Virtual (VDD x64)
+
+> [!IMPORTANT]
+> O Windows bloqueia a criação automática de nós de exibição virtuais feitos apenas com `pnputil /add-driver`. É necessário passar pelo assistente de hardware nativo do Windows:
+
+1. **Baixar e descompactar os drivers VDD:**
+   * Baixe o release `VirtualDisplayDriver-x64.zip` do repositório [VirtualDrivers/Virtual-Display-Driver](https://github.com/VirtualDrivers/Virtual-Display-Driver).
+   * Extraia na pasta definitiva: `C:\VirtualDisplayDriver\VirtualDisplayDriver`.
+2. **Instalar os Certificados de Teste (Como Admin):**
+   ```cmd
+   certutil -addstore "Root" "C:\VirtualDisplayDriver\VirtualDisplayDriver\Virtual_Display_Driver.cer"
+   certutil -addstore "TrustedPublisher" "C:\VirtualDisplayDriver\VirtualDisplayDriver\Virtual_Display_Driver.cer"
+   ```
+3. **Instalação do Dispositivo via Assistente:**
+   * Execute `hdwwiz` (Assistente de Hardware do Windows).
+   * Avançar ➔ "Instalar o hardware que eu selecionar manualmente em uma lista (Avançado)".
+   * Selecione **Adaptadores de vídeo** (Display adapters).
+   * Clique em **Com disco... (Have Disk)** e aponte para:
+     ```text
+     C:\VirtualDisplayDriver\VirtualDisplayDriver\MttVDD.inf
+     ```
+   * Conclua o assistente. O Windows criará o nó de vídeo virtual.
+
+---
+
+## 4. Configuração das Rotas no Sunshine (`apps.json`)
+
+Para que o Sunshine permita ao Moonlight escolher entre o modo normal e o modo tela cheia dedicada:
+
+1. Obtenha os nomes das saídas usando a ferramenta nativa do Sunshine:
+   ```cmd
+   "C:\Program Files\Sunshine\tools\dxgi-info.exe"
+   ```
+   * O monitor físico será algo como `\\.\DISPLAY1`.
+   * O monitor virtual será algo como `\\.\DISPLAY2` ou `\\.\DISPLAY5`.
+2. Configure o arquivo `apps.json` (localizado em `C:\Program Files\Sunshine\config\apps.json`) com base no template em `configs/sunshine_apps.json`:
+   * **Desktop (Monitor Principal):** aponta para a tela física.
+   * **Coop Tela Cheia (Monitor Virtual):** aponta para a tela virtual (ex: `\\.\DISPLAY5`).
+3. Reinicie o serviço do Sunshine:
+   ```powershell
+   Restart-Service SunshineService
    ```
 
-### Passo 4: Configurar Perfis no Sunshine (`apps.json`)
-O Sunshine expõe duas opções para o Moonlight:
-* **"Desktop (Monitor Principal)"**: Transmite a tela física `\\.\DISPLAY1` (ideal para jogos com split-screen unificado como *A Way Out*).
-* **"Coop Tela Cheia (Monitor Virtual)"**: Transmite a tela virtual `\\.\DISPLAY5` (ideal para *Borderlands, Left 4 Dead 2, Resident Evil, etc.* via Nucleus Co-op).
+---
 
-Execute o script `scripts/apply_sunshine_config.bat` como Administrador para aplicar as rotas de tela no Sunshine.
+## 5. Como Jogar na Prática
+
+1. **Modo Clássico (Split-Screen Compartilhado):**
+   * Usado em jogos como *A Way Out*, *It Takes Two*, etc.
+   * O Player 2 conecta no Moonlight e escolhe: **`Desktop (Monitor Principal)`**.
+2. **Modo Duas Telas Cheias (Sem Split-Screen):**
+   * Usado em jogos compatíveis com o Nucleus Co-op (*Borderlands*, *Left 4 Dead 2*, *Resident Evil*, etc.).
+   * O Host abre o **Nucleus Co-op**, escolhe o jogo, posiciona o Player 1 na Tela 1 e o Player 2 na Tela 2.
+   * O Player 2 conecta no Moonlight e escolhe: **`Coop Tela Cheia (Monitor 2)`**. Ele receberá **apenas a tela dele em 1080p cheia** no celular ou monitor remoto.
