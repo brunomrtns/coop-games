@@ -1,0 +1,33 @@
+{
+  "env": {},
+  "apps": [
+    {
+      "name": "Desktop (Monitor Principal)",
+      "image-path": "desktop.png"
+    },
+    {
+      "name": "Coop Tela Cheia (Monitor 2)",
+      "output": "\\\\.\\DISPLAY2",
+      "prep-cmd": [
+        {
+          "do": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\Bruno\\coop-games\\scripts\\toggle_virtual_monitor.ps1\" -Action enable",
+          "undo": "powershell -ExecutionPolicy Bypass -File \"C:\\Users\\Bruno\\coop-games\\scripts\\toggle_virtual_monitor.ps1\" -Action disable"
+        }
+      ],
+      "image-path": "desktop.png"
+    },
+    {
+      "name": "Steam Big Picture",
+      "cmd": "steam://open/bigpicture",
+      "prep-cmd": [
+        {
+          "do": "",
+          "undo": "steam://close/bigpicture"
+        }
+      ],
+      "auto-detach": true,
+      "wait-all": true,
+      "image-path": "steam.png"
+    }
+  ]
+}
