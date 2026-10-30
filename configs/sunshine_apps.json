@@ -2,14 +2,18 @@
   "env": {},
   "apps": [
     {
-      "name": "1. MODO NORMAL (A Way Out)",
-      "output": 0,
+      "name": "Desktop",
       "image-path": "desktop.png"
     },
     {
-      "name": "2. MODO 2 TELAS (Nucleus Coop)",
-      "output": 1,
-      "image-path": "box.png"
+      "name": "Gears 5",
+      "cmd": "C:\\Users\\Bruno\\Downloads\\Gears.5-SteamRIP.com\\Gears 5\\GearGame\\Binaries\\Steam\\Gears5.exe",
+      "image-path": "desktop.png"
+    },
+    {
+      "name": "A Way Out",
+      "cmd": "C:\\Users\\Bruno\\Downloads\\A-Way-Out-SteamRIP.com\\A Way Out\\Haze1\\Binaries\\Win64\\AWayOut.exe",
+      "image-path": "desktop.png"
     }
   ]
 }
