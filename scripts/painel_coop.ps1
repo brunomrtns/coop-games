@@ -3,147 +3,145 @@ Add-Type -AssemblyName System.Drawing
 
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Central de Controle Coop"
-$form.Size = New-Object System.Drawing.Size(460, 430)
+$form.Text = "Central Coop & Privacidade"
+$form.Size = New-Object System.Drawing.Size(440, 360)
 $form.StartPosition = "CenterScreen"
 $form.FormBorderStyle = "FixedDialog"
 $form.MaximizeBox = $false
-$form.BackColor = [System.Drawing.Color]::FromArgb(28, 28, 30)
+$form.BackColor = [System.Drawing.Color]::FromArgb(24, 24, 27)
 
-$titleFont = New-Object System.Drawing.Font("Segoe UI", 13, [System.Drawing.FontStyle]::Bold)
-$subFont = New-Object System.Drawing.Font("Segoe UI", 9)
-$boldFont = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+$fontTitle = New-Object System.Drawing.Font("Segoe UI", 12, [System.Drawing.FontStyle]::Bold)
+$fontRegular = New-Object System.Drawing.Font("Segoe UI", 9)
+$fontBold = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
 
-$lblTitle = New-Object System.Windows.Forms.Label
-$lblTitle.Text = "Central de Controle Coop"
-$lblTitle.Font = $titleFont
-$lblTitle.ForeColor = [System.Drawing.Color]::White
-$lblTitle.Location = New-Object System.Drawing.Point(20, 15)
-$lblTitle.AutoSize = $true
-$form.Controls.Add($lblTitle)
+# Header
+$lblHeader = New-Object System.Windows.Forms.Label
+$lblHeader.Text = "Central Coop"
+$lblHeader.Font = $fontTitle
+$lblHeader.ForeColor = [System.Drawing.Color]::White
+$lblHeader.Location = New-Object System.Drawing.Point(20, 15)
+$lblHeader.AutoSize = $true
+$form.Controls.Add($lblHeader)
 
-$lblDesc = New-Object System.Windows.Forms.Label
-$lblDesc.Text = "Controle de privacidade, streaming e telas."
-$lblDesc.Font = $subFont
-$lblDesc.ForeColor = [System.Drawing.Color]::Gray
-$lblDesc.Location = New-Object System.Drawing.Point(22, 42)
-$lblDesc.AutoSize = $true
-$form.Controls.Add($lblDesc)
-
+# Status Box
 $grpStatus = New-Object System.Windows.Forms.GroupBox
-$grpStatus.Text = "Status Atual"
+$grpStatus.Text = "Status Real do Sistema"
 $grpStatus.ForeColor = [System.Drawing.Color]::LightGray
-$grpStatus.Location = New-Object System.Drawing.Point(20, 70)
-$grpStatus.Size = New-Object System.Drawing.Size(400, 75)
+$grpStatus.Location = New-Object System.Drawing.Point(20, 50)
+$grpStatus.Size = New-Object System.Drawing.Size(385, 75)
 $form.Controls.Add($grpStatus)
 
-$lblTailscale = New-Object System.Windows.Forms.Label
-$lblTailscale.Text = "Rede: Verificando..."
-$lblTailscale.Font = $subFont
-$lblTailscale.ForeColor = [System.Drawing.Color]::White
-$lblTailscale.Location = New-Object System.Drawing.Point(15, 25)
-$lblTailscale.AutoSize = $true
-$grpStatus.Controls.Add($lblTailscale)
+$lblTS = New-Object System.Windows.Forms.Label
+$lblTS.Text = "Rede: Verificando..."
+$lblTS.Font = $fontRegular
+$lblTS.ForeColor = [System.Drawing.Color]::White
+$lblTS.Location = New-Object System.Drawing.Point(15, 25)
+$lblTS.AutoSize = $true
+$grpStatus.Controls.Add($lblTS)
 
-$lblMonitor = New-Object System.Windows.Forms.Label
-$lblMonitor.Text = "Stream Transmitindo: Verificando..."
-$lblMonitor.Font = $subFont
-$lblMonitor.ForeColor = [System.Drawing.Color]::LightGreen
-$lblMonitor.Location = New-Object System.Drawing.Point(15, 48)
-$lblMonitor.AutoSize = $true
-$grpStatus.Controls.Add($lblMonitor)
+$lblStatusDesc = New-Object System.Windows.Forms.Label
+$lblStatusDesc.Text = "..."
+$lblStatusDesc.Font = $fontRegular
+$lblStatusDesc.ForeColor = [System.Drawing.Color]::LightGray
+$lblStatusDesc.Location = New-Object System.Drawing.Point(15, 48)
+$lblStatusDesc.AutoSize = $true
+$grpStatus.Controls.Add($lblStatusDesc)
 
-function Update-Status {
-    $ts = (tailscale status --json | ConvertFrom-Json).BackendState
-    if ($ts -eq "Running") {
-        $lblTailscale.Text = "Rede Tailscale: ATIVA (Amigo consegue conectar)"
-        $lblTailscale.ForeColor = [System.Drawing.Color]::LightGreen
-        $btnPriv.Text = "MODO PRIVACIDADE: Bloquear Amigo (Desconectar)"
-        $btnPriv.BackColor = [System.Drawing.Color]::FromArgb(192, 57, 43)
-    } else {
-        $lblTailscale.Text = "Rede Tailscale: BLOQUEADA (100% Invisivel)"
-        $lblTailscale.ForeColor = [System.Drawing.Color]::Salmon
-        $btnPriv.Text = "ATIVAR REDE: Permitir Conexao do Amigo"
-        $btnPriv.BackColor = [System.Drawing.Color]::FromArgb(39, 174, 96)
+function Atualizar-Interface {
+    $tsStatus = $null
+    try {
+        $tsJson = tailscale status --json 2>$null | ConvertFrom-Json
+        $tsStatus = $tsJson.BackendState
+    } catch {
+        $tsStatus = "Stopped"
     }
 
-    $conf = Get-Content "C:\Program Files\Sunshine\config\sunshine.conf" -ErrorAction SilentlyContinue
-    if ($conf -match "DISPLAY5") {
-        $lblMonitor.Text = "Stream Direcionado para: MONITOR 2 VIRTUAL"
-        $lblMonitor.ForeColor = [System.Drawing.Color]::DeepSkyBlue
+    if ($tsStatus -eq "Running") {
+        $lblTS.Text = "Rede Tailscale: LIGADA (Visivel para Amigos)"
+        $lblTS.ForeColor = [System.Drawing.Color]::FromArgb(46, 204, 113)
+        $lblStatusDesc.Text = "Streaming liberado. Seus amigos conseguem conectar."
+        $lblStatusDesc.ForeColor = [System.Drawing.Color]::LightGreen
+        
+        $btnToggle.Text = "ATIVAR MODO PRIVACIDADE (Cortar Rede)"
+        $btnToggle.BackColor = [System.Drawing.Color]::FromArgb(231, 76, 60)
     } else {
-        $lblMonitor.Text = "Stream Direcionado para: MONITOR 1 PRINCIPAL"
-        $lblMonitor.ForeColor = [System.Drawing.Color]::LightGreen
+        $lblTS.Text = "Rede Tailscale: DESLIGADA (100% Privado)"
+        $lblTS.ForeColor = [System.Drawing.Color]::FromArgb(231, 76, 60)
+        $lblStatusDesc.Text = "PC blindado. NINGUEM consegue ver sua tela ou conectar."
+        $lblStatusDesc.ForeColor = [System.Drawing.Color]::Salmon
+
+        $btnToggle.Text = "LIGAR REDE (Liberar para Jogar com Amigo)"
+        $btnToggle.BackColor = [System.Drawing.Color]::FromArgb(39, 174, 96)
     }
 }
 
-$btnPriv = New-Object System.Windows.Forms.Button
-$btnPriv.Location = New-Object System.Drawing.Point(20, 160)
-$btnPriv.Size = New-Object System.Drawing.Size(400, 38)
-$btnPriv.Font = $boldFont
-$btnPriv.ForeColor = [System.Drawing.Color]::White
-$btnPriv.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$btnPriv.FlatAppearance.BorderSize = 0
-$btnPriv.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnPriv.Add_Click({
-    $ts = (tailscale status --json | ConvertFrom-Json).BackendState
-    if ($ts -eq "Running") { tailscale down } else { tailscale up }
-    Update-Status
+# Botao Toggle Privacidade
+$btnToggle = New-Object System.Windows.Forms.Button
+$btnToggle.Location = New-Object System.Drawing.Point(20, 140)
+$btnToggle.Size = New-Object System.Drawing.Size(385, 45)
+$btnToggle.Font = $fontBold
+$btnToggle.ForeColor = [System.Drawing.Color]::White
+$btnToggle.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnToggle.FlatAppearance.BorderSize = 0
+$btnToggle.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnToggle.Add_Click({
+    $btnToggle.Enabled = $false
+    try {
+        $tsJson = tailscale status --json 2>$null | ConvertFrom-Json
+        if ($tsJson.BackendState -eq "Running") {
+            tailscale down
+        } else {
+            tailscale up
+        }
+    } catch {
+        tailscale down
+    }
+    Atualizar-Interface
+    $btnToggle.Enabled = $true
 })
-$form.Controls.Add($btnPriv)
+$form.Controls.Add($btnToggle)
 
-$grpProfiles = New-Object System.Windows.Forms.GroupBox
-$grpProfiles.Text = "Escolher Tela que o Amigo Enxerga"
-$grpProfiles.ForeColor = [System.Drawing.Color]::LightGray
-$grpProfiles.Location = New-Object System.Drawing.Point(20, 210)
-$grpProfiles.Size = New-Object System.Drawing.Size(400, 155)
-$form.Controls.Add($grpProfiles)
+# Grupo Acoes
+$grpAcoes = New-Object System.Windows.Forms.GroupBox
+$grpAcoes.Text = "Acoes Rapidas"
+$grpAcoes.ForeColor = [System.Drawing.Color]::LightGray
+$grpAcoes.Location = New-Object System.Drawing.Point(20, 200)
+$grpAcoes.Size = New-Object System.Drawing.Size(385, 95)
+$form.Controls.Add($grpAcoes)
 
-$btnSet1 = New-Object System.Windows.Forms.Button
-$btnSet1.Text = "Transmitir MONITOR 1 (Modo Normal / A Way Out)"
-$btnSet1.Location = New-Object System.Drawing.Point(15, 25)
-$btnSet1.Size = New-Object System.Drawing.Size(370, 36)
-$btnSet1.Font = $boldFont
-$btnSet1.ForeColor = [System.Drawing.Color]::White
-$btnSet1.BackColor = [System.Drawing.Color]::FromArgb(44, 62, 80)
-$btnSet1.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$btnSet1.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnSet1.Add_Click({
-    Start-Process "C:\Users\Bruno\OneDrive\Área de Trabalho\Ativar_Monitor_1_Principal.bat" -Verb RunAs -Wait
-    Update-Status
-    [System.Windows.Forms.MessageBox]::Show("Sunshine configurado para transmitir o Monitor 1 (Normal)!", "Sucesso")
+# Botao A Way Out
+$btnAWayOut = New-Object System.Windows.Forms.Button
+$btnAWayOut.Text = "Iniciar A Way Out (Liga Rede e Abre Jogo)"
+$btnAWayOut.Location = New-Object System.Drawing.Point(15, 25)
+$btnAWayOut.Size = New-Object System.Drawing.Size(355, 30)
+$btnAWayOut.Font = $fontRegular
+$btnAWayOut.ForeColor = [System.Drawing.Color]::White
+$btnAWayOut.BackColor = [System.Drawing.Color]::FromArgb(41, 128, 185)
+$btnAWayOut.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnAWayOut.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnAWayOut.Add_Click({
+    tailscale up
+    Atualizar-Interface
+    $game = "C:\Users\Bruno\Downloads\A-Way-Out-SteamRIP.com\A Way Out\Haze1\Binaries\Win64\AWayOut.exe"
+    if (Test-Path $game) { Start-Process $game }
 })
-$grpProfiles.Controls.Add($btnSet1)
+$grpAcoes.Controls.Add($btnAWayOut)
 
-$btnSet2 = New-Object System.Windows.Forms.Button
-$btnSet2.Text = "Transmitir MONITOR 2 (Modo 2 Telas / Nucleus Coop)"
-$btnSet2.Location = New-Object System.Drawing.Point(15, 68)
-$btnSet2.Size = New-Object System.Drawing.Size(370, 36)
-$btnSet2.Font = $boldFont
-$btnSet2.ForeColor = [System.Drawing.Color]::White
-$btnSet2.BackColor = [System.Drawing.Color]::FromArgb(142, 68, 173)
-$btnSet2.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$btnSet2.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnSet2.Add_Click({
-    Start-Process "C:\Users\Bruno\OneDrive\Área de Trabalho\Ativar_Monitor_2_Virtual.bat" -Verb RunAs -Wait
-    Update-Status
-    [System.Windows.Forms.MessageBox]::Show("Sunshine configurado para transmitir o Monitor 2 Virtual!", "Sucesso")
+# Botao Remover Monitor Virtual Bugado
+$btnRemover = New-Object System.Windows.Forms.Button
+$btnRemover.Text = "Desinstalar Monitor Virtual do Windows"
+$btnRemover.Location = New-Object System.Drawing.Point(15, 60)
+$btnRemover.Size = New-Object System.Drawing.Size(355, 25)
+$btnRemover.Font = $fontRegular
+$btnRemover.ForeColor = [System.Drawing.Color]::LightGray
+$btnRemover.BackColor = [System.Drawing.Color]::FromArgb(52, 73, 94)
+$btnRemover.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
+$btnRemover.Cursor = [System.Windows.Forms.Cursors]::Hand
+$btnRemover.Add_Click({
+    Start-Process "devmgmt.msc"
+    [System.Windows.Forms.MessageBox]::Show("Para remover o monitor virtual:`n1. Na janela que abriu (Gerenciador de Dispositivos), abra 'Adaptadores de video'`n2. Clique com botao direito em 'Virtual Display Driver' e escolha 'Desinstalar dispositivo'.`n`nPronto! Seu PC volta ao estado 100% original sem telas fantasmas.", "Como Remover")
 })
-$grpProfiles.Controls.Add($btnSet2)
+$grpAcoes.Controls.Add($btnRemover)
 
-$btnNucleus = New-Object System.Windows.Forms.Button
-$btnNucleus.Text = "Abrir Nucleus Co-op"
-$btnNucleus.Location = New-Object System.Drawing.Point(15, 112)
-$btnNucleus.Size = New-Object System.Drawing.Size(370, 30)
-$btnNucleus.Font = $subFont
-$btnNucleus.ForeColor = [System.Drawing.Color]::LightGray
-$btnNucleus.BackColor = [System.Drawing.Color]::FromArgb(52, 73, 94)
-$btnNucleus.FlatStyle = [System.Windows.Forms.FlatStyle]::Flat
-$btnNucleus.Cursor = [System.Windows.Forms.Cursors]::Hand
-$btnNucleus.Add_Click({
-    Start-Process "C:\NucleusCo-op\NucleusCoop.exe"
-})
-$grpProfiles.Controls.Add($btnNucleus)
-
-Update-Status
+Atualizar-Interface
 $form.ShowDialog()
