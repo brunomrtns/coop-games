@@ -1,0 +1,5 @@
+tools/
+scripts/crashlog.txt
+scripts/screen_*.png
+*.log
+*.sentinel

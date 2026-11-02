@@ -1,11 +1,7 @@
 @echo off
 setlocal
-cd /d "C:\Program Files\Sunshine\config"
-
 if "%1"=="virtual" (
-    powershell -Command "Set-Content -Path sunshine.conf -Value 'output_name = \\.\DISPLAY5'"
+    powershell -ExecutionPolicy Bypass -File "C:\Users\Bruno\coop-games\scripts\control_service.ps1" enable
 ) else (
-    powershell -Command "Clear-Content -Path sunshine.conf"
+    powershell -ExecutionPolicy Bypass -File "C:\Users\Bruno\coop-games\scripts\control_service.ps1" disable
 )
-net stop SunshineService
-net start SunshineService
