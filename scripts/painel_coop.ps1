@@ -21,7 +21,6 @@ $colorTextWhite = [System.Drawing.Color]::FromArgb(240, 240, 245)
 $colorTextMuted = [System.Drawing.Color]::FromArgb(150, 150, 160)
 $colorGreen = [System.Drawing.Color]::FromArgb(46, 204, 113)
 $colorRed = [System.Drawing.Color]::FromArgb(231, 76, 60)
-$colorCardBg = [System.Drawing.Color]::FromArgb(30, 30, 36)
 
 # Cabecalho
 $lblHeader = New-Object System.Windows.Forms.Label
@@ -114,7 +113,7 @@ $btnModo1.Cursor = [System.Windows.Forms.Cursors]::Hand
 $grpModos.Controls.Add($btnModo1)
 
 $lblModo1Desc = New-Object System.Windows.Forms.Label
-$lblModo1Desc.Text = "Ideal para A Way Out, It Takes Two ou qualquer jogo split-screen local padrao.\nDesativa o monitor virtual para 0% consumo de GPU e transmite sua tela principal."
+$lblModo1Desc.Text = "Ideal para A Way Out, It Takes Two ou qualquer jogo split-screen local padrao.`nDesativa o monitor virtual para 0% consumo de GPU e transmite sua tela principal."
 $lblModo1Desc.Font = $fontRegular
 $lblModo1Desc.ForeColor = $colorTextMuted
 $lblModo1Desc.Location = New-Object System.Drawing.Point(18, 72)
@@ -134,7 +133,7 @@ $btnModo2.Cursor = [System.Windows.Forms.Cursors]::Hand
 $grpModos.Controls.Add($btnModo2)
 
 $lblModo2Desc = New-Object System.Windows.Forms.Label
-$lblModo2Desc.Text = "Ativa o monitor virtual e direciona o Sunshine para ele.\nCada jogador joga em tela cheia independente pelo Nucleus Co-op."
+$lblModo2Desc.Text = "Ativa o monitor virtual e direciona o Sunshine para ele.`nCada jogador joga em tela cheia independente pelo Nucleus Co-op."
 $lblModo2Desc.Font = $fontRegular
 $lblModo2Desc.ForeColor = $colorTextMuted
 $lblModo2Desc.Location = New-Object System.Drawing.Point(18, 152)
@@ -171,7 +170,6 @@ $form.Controls.Add($btnAtualizar)
 
 # --- FUNCAO PRINCIPAL DE ATUALIZACAO ---
 function Atualizar-Tudo {
-    # 1. Verificar Tailscale
     $tsOnline = $false
     try {
         $tsJson = tailscale status --json 2>$null | ConvertFrom-Json
@@ -235,9 +233,8 @@ $btnPrivacidade.Add_Click({
 # Evento Modo 1 (Desativar Monitor Virtual)
 $btnModo1.Add_Click({
     $btnModo1.Enabled = $false
-    # Executa elevacao para desativar PnP e Sunshine
-    $cmd = "powershell -ExecutionPolicy Bypass -File `\"C:\Users\Bruno\coop-games\scripts\control_service.ps1`\" disable"
-    Start-Process powershell -Verb RunAs -ArgumentList "-WindowStyle Hidden -Command `"$cmd`"" -Wait
+    $controlPath = "C:\Users\Bruno\coop-games\scripts\control_service.ps1"
+    Start-Process powershell -Verb RunAs -ArgumentList "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$controlPath`" disable" -Wait
     Atualizar-Tudo
     $btnModo1.Enabled = $true
     [System.Windows.Forms.MessageBox]::Show("Modo Normal ativado com sucesso!`n`n- Monitor Virtual: DESATIVADO (0% GPU)`n- Sunshine: Transmitindo Monitor Principal", "Modo Normal")
@@ -246,9 +243,8 @@ $btnModo1.Add_Click({
 # Evento Modo 2 (Ativar Monitor Virtual)
 $btnModo2.Add_Click({
     $btnModo2.Enabled = $false
-    # Executa elevacao para ativar PnP e Sunshine
-    $cmd = "powershell -ExecutionPolicy Bypass -File `\"C:\Users\Bruno\coop-games\scripts\control_service.ps1`\" enable"
-    Start-Process powershell -Verb RunAs -ArgumentList "-WindowStyle Hidden -Command `"$cmd`"" -Wait
+    $controlPath = "C:\Users\Bruno\coop-games\scripts\control_service.ps1"
+    Start-Process powershell -Verb RunAs -ArgumentList "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$controlPath`" enable" -Wait
     Atualizar-Tudo
     $btnModo2.Enabled = $true
     [System.Windows.Forms.MessageBox]::Show("Modo 2 Telas ativado com sucesso!`n`n- Monitor Virtual: ATIVO`n- Sunshine: Transmitindo Monitor 2 Virtual`n`nAgora voce pode abrir o Nucleus Co-op e posicionar as janelas!", "Modo 2 Telas")
