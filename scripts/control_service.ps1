@@ -18,7 +18,38 @@ $appsContent = @"
 }
 "@
 
-$vddXml = @"
+if ($Orientation -eq "portrait") {
+    $vddXml = @"
+<?xml version="1.0" encoding="utf-8"?>
+<vdd_settings>
+  <monitors>
+    <count>1</count>
+  </monitors>
+  <gpu>
+    <friendlyname>default</friendlyname>
+  </gpu>
+  <resolutions>
+    <resolution>
+      <width>1080</width>
+      <height>1920</height>
+      <refresh_rate>60</refresh_rate>
+      <refresh_rate>120</refresh_rate>
+      <refresh_rate>144</refresh_rate>
+      <refresh_rate>165</refresh_rate>
+    </resolution>
+  </resolutions>
+  <options>
+    <CustomEdid>false</CustomEdid>
+    <PreventSpoof>false</PreventSpoof>
+    <EdidCeaOverride>false</EdidCeaOverride>
+    <HardwareCursor>true</HardwareCursor>
+    <SDR10bit>false</SDR10bit>
+    <HDRPlus>false</HDRPlus>
+  </options>
+</vdd_settings>
+"@
+} else {
+    $vddXml = @"
 <?xml version="1.0" encoding="utf-8"?>
 <vdd_settings>
   <monitors>
@@ -36,11 +67,6 @@ $vddXml = @"
       <refresh_rate>144</refresh_rate>
       <refresh_rate>165</refresh_rate>
     </resolution>
-    <resolution>
-      <width>1080</width>
-      <height>1920</height>
-      <refresh_rate>60</refresh_rate>
-    </resolution>
   </resolutions>
   <options>
     <CustomEdid>false</CustomEdid>
@@ -52,6 +78,7 @@ $vddXml = @"
   </options>
 </vdd_settings>
 "@
+}
 
 if ($Action -eq "disable") {
     # Encerrar OBS caso ainda esteja aberto
@@ -72,25 +99,18 @@ if ($Action -eq "disable") {
     # Aguardar o Windows detectar o novo monitor
     Start-Sleep -Seconds 2
     
-    # Forcar resolucao 1920x1080 e taxa de atualizacao alta para sincronizar com o Odyssey G5 (165Hz)
+    # Forcar resolucao correta e taxa de atualizacao alta
     try {
         Import-Module DisplayConfig -ErrorAction SilentlyContinue
         $v = Get-DisplayInfo -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "*VDD*" -or $_.DisplayName -like "*Virtual*" }
         if ($v) {
             $id = @($v)[0].DisplayId
-            # Sempre volta para paisagem 1920x1080 primeiro (estado conhecido)
-            Set-DisplayRotation -DisplayId $id -Rotation None -ErrorAction SilentlyContinue
-            Set-DisplayResolution -DisplayId $id -Width 1920 -Height 1080 -ErrorAction SilentlyContinue
-            Set-DisplayRefreshRate -DisplayId $id -RefreshRate 60 -ErrorAction SilentlyContinue
             if ($Orientation -eq "portrait") {
-                # Monitor virtual em pe (1080x1920) para jogar com o celular na vertical
-                try {
-                    Set-DisplayRotation -DisplayId $id -Rotation Rotate90 -ErrorAction Stop
-                } catch {
-                    # Alternativa: modo nativo 1080x1920 do VDD
-                    Set-DisplayResolution -DisplayId $id -Width 1080 -Height 1920 -ErrorAction SilentlyContinue
-                }
+                Set-DisplayResolution -DisplayId $id -Width 1080 -Height 1920 -ErrorAction SilentlyContinue
+            } else {
+                Set-DisplayResolution -DisplayId $id -Width 1920 -Height 1080 -ErrorAction SilentlyContinue
             }
+            Set-DisplayRefreshRate -DisplayId $id -RefreshRate 60 -ErrorAction SilentlyContinue
         }
     } catch {}
 
