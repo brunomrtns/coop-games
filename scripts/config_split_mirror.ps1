@@ -69,21 +69,37 @@ switch ($Mode) {
         $boundsType = 2
     }
     "Vertical_Right_Full" {
-        # Metade da direita (Player 2) - Tela cheia sem distorcer
+        # Metade da direita (Player 2) - canvas em pe (1080x1920), imagem inteira sem cortar
         $cropTop = 0
         $cropBottom = 0
         $cropLeft = 1280
         $cropRight = 0
-        $boundsType = 3
+        $boundsType = 2
     }
     "Vertical_Left_Full" {
-        # Metade da esquerda (Player 1) - Tela cheia sem distorcer
+        # Metade da esquerda (Player 1) - canvas em pe (1080x1920), imagem inteira sem cortar
         $cropTop = 0
         $cropBottom = 0
         $cropLeft = 0
         $cropRight = 1280
-        $boundsType = 3
+        $boundsType = 2
     }
+}
+
+# Cortes verticais (metade esquerda/direita) sao mais altos que largos:
+# usar canvas em pe (1080x1920) para o celular em pe preencher toda a largura.
+$isPortrait = $Mode -like "Vertical_*"
+if ($isPortrait) { $canvasW = 1080; $canvasH = 1920 } else { $canvasW = 1920; $canvasH = 1080 }
+
+# Atualizar resolucao do canvas/saida do perfil CoopSplit
+$profileIni = "$obsDir\config\obs-studio\basic\profiles\CoopSplit\basic.ini"
+if (Test-Path $profileIni) {
+    $ini = Get-Content $profileIni -Raw
+    $ini = $ini -replace "(?m)^BaseCX=\d+", "BaseCX=$canvasW"
+    $ini = $ini -replace "(?m)^BaseCY=\d+", "BaseCY=$canvasH"
+    $ini = $ini -replace "(?m)^OutputCX=\d+", "OutputCX=$canvasW"
+    $ini = $ini -replace "(?m)^OutputCY=\d+", "OutputCY=$canvasH"
+    Set-Content -Path $profileIni -Value $ini -Force -NoNewline
 }
 
 # Identificador exato verificado do monitor principal Samsung Odyssey G5
@@ -124,7 +140,7 @@ $sceneCollection = [ordered]@{
                         "crop_right" = $cropRight
                         "bounds_type" = $boundsType
                         "bounds_align" = 0
-                        "bounds" = [ordered]@{ "x" = 1920.0; "y" = 1080.0 }
+                        "bounds" = [ordered]@{ "x" = [double]$canvasW; "y" = [double]$canvasH }
                     }
                 )
             }

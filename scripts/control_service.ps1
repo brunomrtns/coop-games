@@ -1,4 +1,10 @@
-param([string]$Action)
+param(
+    [string]$Action,
+    # landscape = monitor virtual 1920x1080 (cortes horizontais)
+    # portrait  = monitor virtual 1080x1920 (cortes verticais, celular em pe)
+    [ValidateSet("landscape", "portrait")]
+    [string]$Orientation = "landscape"
+)
 
 $appsContent = @"
 {
@@ -29,6 +35,11 @@ $vddXml = @"
       <refresh_rate>120</refresh_rate>
       <refresh_rate>144</refresh_rate>
       <refresh_rate>165</refresh_rate>
+    </resolution>
+    <resolution>
+      <width>1080</width>
+      <height>1920</height>
+      <refresh_rate>60</refresh_rate>
     </resolution>
   </resolutions>
   <options>
@@ -66,8 +77,20 @@ if ($Action -eq "disable") {
         Import-Module DisplayConfig -ErrorAction SilentlyContinue
         $v = Get-DisplayInfo -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "*VDD*" -or $_.DisplayName -like "*Virtual*" }
         if ($v) {
-            Set-DisplayResolution -DisplayId $v.DisplayId -Width 1920 -Height 1080 -ErrorAction SilentlyContinue
-            Set-DisplayRefreshRate -DisplayId $v.DisplayId -RefreshRate 60 -ErrorAction SilentlyContinue
+            $id = @($v)[0].DisplayId
+            # Sempre volta para paisagem 1920x1080 primeiro (estado conhecido)
+            Set-DisplayRotation -DisplayId $id -Rotation None -ErrorAction SilentlyContinue
+            Set-DisplayResolution -DisplayId $id -Width 1920 -Height 1080 -ErrorAction SilentlyContinue
+            Set-DisplayRefreshRate -DisplayId $id -RefreshRate 60 -ErrorAction SilentlyContinue
+            if ($Orientation -eq "portrait") {
+                # Monitor virtual em pe (1080x1920) para jogar com o celular na vertical
+                try {
+                    Set-DisplayRotation -DisplayId $id -Rotation Rotate90 -ErrorAction Stop
+                } catch {
+                    # Alternativa: modo nativo 1080x1920 do VDD
+                    Set-DisplayResolution -DisplayId $id -Width 1080 -Height 1920 -ErrorAction SilentlyContinue
+                }
+            }
         }
     } catch {}
 

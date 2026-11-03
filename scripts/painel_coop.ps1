@@ -195,8 +195,8 @@ $cmbDivisao.Items.Add("Horizontal: Metade Baixo (Player 2) - Tela Cheia Celular"
 $cmbDivisao.Items.Add("Horizontal: Metade Cima (Player 1) - Tela Cheia Celular") | Out-Null
 $cmbDivisao.Items.Add("Horizontal: Metade Baixo (Player 2) - Visao Ampla 32:9") | Out-Null
 $cmbDivisao.Items.Add("Horizontal: Metade Cima (Player 1) - Visao Ampla 32:9") | Out-Null
-$cmbDivisao.Items.Add("Vertical: Metade Direita (Player 2) - Tela Cheia Celular") | Out-Null
-$cmbDivisao.Items.Add("Vertical: Metade Esquerda (Player 1) - Tela Cheia Celular") | Out-Null
+$cmbDivisao.Items.Add("Vertical: Metade Direita (Player 2) - Celular EM PE") | Out-Null
+$cmbDivisao.Items.Add("Vertical: Metade Esquerda (Player 1) - Celular EM PE") | Out-Null
 $cmbDivisao.SelectedIndex = 0
 $grpModos.Controls.Add($cmbDivisao)
 
@@ -392,9 +392,10 @@ $btnStartMirror.Add_Click({
         5 { $modeParam = "Vertical_Left_Full" }
     }
 
-    # Ativar monitor virtual se necessario
+    # Ativar monitor virtual (em pe nos cortes verticais, deitado nos horizontais)
+    $orientation = "landscape"; if ($modeParam -like "Vertical_*") { $orientation = "portrait" }
     $controlPath = "C:\Users\Bruno\coop-games\scripts\control_service.ps1"
-    Start-Process powershell -Verb RunAs -ArgumentList "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$controlPath`" enable" -Wait
+    Start-Process powershell -Verb RunAs -ArgumentList "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$controlPath`" enable $orientation" -Wait
 
     # Executar script de controle do espelho
     $mirrorScript = "C:\Users\Bruno\coop-games\scripts\control_split_mirror.ps1"
@@ -402,7 +403,7 @@ $btnStartMirror.Add_Click({
 
     Start-Sleep -Seconds 1
     Atualizar-Tudo
-    [System.Windows.Forms.MessageBox]::Show("Modo Espelho Split ativado!`n`n- Formato: $($cmbDivisao.SelectedItem)`n- Monitor Virtual: ATIVO (transmitindo para o celular)`n- OBS: Projetando recorte em tela cheia 16:9`n`nAgora abra o jogo desejado no seu PC e conecte o celular via Moonlight!", "Modo Espelho Split")
+    [System.Windows.Forms.MessageBox]::Show("Modo Espelho Split ativado!`n`n- Formato: $($cmbDivisao.SelectedItem)`n- Monitor Virtual: ATIVO (transmitindo para o celular)`n- OBS: Projetando recorte em tela cheia`n`nAgora abra o jogo desejado no seu PC e conecte o celular via Moonlight!", "Modo Espelho Split")
 })
 
 # Evento Parar Espelho

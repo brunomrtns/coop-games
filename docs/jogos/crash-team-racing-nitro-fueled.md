@@ -38,4 +38,14 @@ async_pipelines=0
 
 ## 3. Uso com o split-screen do coop-games
 
-Com o jogo em tela cheia no monitor principal (1920x1080), use no Central Coop o corte **horizontal** (cima/baixo), que é o que o CTR usa no modo 2 jogadores.
+O CTR divide a tela **na vertical** (lado a lado). No Central Coop escolha **"Vertical: Metade Direita (Player 2) - Celular EM PE"**.
+
+Nesse modo o monitor virtual fica **em pé (1080x1920)** e o OBS encaixa a metade do jogo inteira, sem cortar as laterais.
+
+### Celular em pé no Moonlight
+
+O Moonlight oficial do Android **só transmite deitado** (não tem opção de retrato). Para jogar com o celular em pé:
+
+- Use o **Artemis** (fork do Moonlight, `ClassicOldSong/moonlight-android` no GitHub), que funciona com o mesmo Sunshine.
+- Nas configurações do Artemis, ative o modo retrato / orientação automática.
+- Com o Moonlight oficial deitado, a imagem aparece inteira no centro, com faixas pretas nas laterais.
