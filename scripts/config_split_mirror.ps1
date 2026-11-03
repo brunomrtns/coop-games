@@ -5,7 +5,8 @@ param(
         "Horizontal_Bottom_Wide",
         "Horizontal_Top_Wide",
         "Vertical_Right_Full",
-        "Vertical_Left_Full"
+        "Vertical_Left_Full",
+        "Custom_Manual"
     )]
     [string]$Mode = "Horizontal_Bottom_Full"
 )
@@ -14,6 +15,14 @@ $obsDir = "C:\Users\Bruno\coop-games\tools\obs-studio"
 $sceneDir = "$obsDir\config\obs-studio\basic\scenes"
 New-Item -ItemType Directory -Path $sceneDir -Force | Out-Null
 
+# Se for modo manual personalizado e o arquivo ja existir, preserva as edicoes manuais feitas no OBS
+if ($Mode -eq "Custom_Manual" -and (Test-Path "$sceneDir\CoopSplit.json")) {
+    Remove-Item -Path "$env:APPDATA\obs-studio\.sentinel" -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path "$obsDir\config\obs-studio\.sentinel" -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Output "Preserved manual OBS scene configuration."
+    exit 0
+}
+
 # O monitor principal real Odyssey G5 e 2560x1440 (16:9)
 # Para telas de celular (16:9 / 20:9) sem barras pretas e sem espremer personagens,
 # o corte focado centraliza a metade do jogador em proporcao exata 16:9 (1280x720 -> 1920x1080):
@@ -21,24 +30,27 @@ $cropTop = 0
 $cropBottom = 0
 $cropLeft = 0
 $cropRight = 0
-$boundsType = 2 # Fit / Scale to inner
+# bounds_type = 3 (Escalar para as bordas externas):
+# Preenche 100% da tela (sem barras pretas) e NUNCA espreme a imagem (mantem proporcao 1:1).
+# Permite mover para os lados mudando apenas Recorte Esquerdo / Direito no OBS sem deformar!
+$boundsType = 3
 
 switch ($Mode) {
     "Horizontal_Bottom_Full" {
-        # Metade de baixo (Player 2) - Recorte 16:9 centralizado (1280x720) que preenche 100% da tela do celular
+        # Metade de baixo (Player 2) - Tela cheia sem distorcer
         $cropTop = 720
         $cropBottom = 0
-        $cropLeft = 640
-        $cropRight = 640
-        $boundsType = 2
+        $cropLeft = 0
+        $cropRight = 0
+        $boundsType = 3
     }
     "Horizontal_Top_Full" {
-        # Metade de cima (Player 1) - Recorte 16:9 centralizado (1280x720)
+        # Metade de cima (Player 1) - Tela cheia sem distorcer
         $cropTop = 0
         $cropBottom = 720
-        $cropLeft = 640
-        $cropRight = 640
-        $boundsType = 2
+        $cropLeft = 0
+        $cropRight = 0
+        $boundsType = 3
     }
     "Horizontal_Bottom_Wide" {
         # Metade de baixo inteira (2560x720) - Visao periferica ampla com barras suaves
@@ -57,20 +69,20 @@ switch ($Mode) {
         $boundsType = 2
     }
     "Vertical_Right_Full" {
-        # Metade da direita (Player 2) - Recorte 16:9 centralizado (1280x720)
-        $cropTop = 360
-        $cropBottom = 360
+        # Metade da direita (Player 2) - Tela cheia sem distorcer
+        $cropTop = 0
+        $cropBottom = 0
         $cropLeft = 1280
         $cropRight = 0
-        $boundsType = 2
+        $boundsType = 3
     }
     "Vertical_Left_Full" {
-        # Metade da esquerda (Player 1) - Recorte 16:9 centralizado (1280x720)
-        $cropTop = 360
-        $cropBottom = 360
+        # Metade da esquerda (Player 1) - Tela cheia sem distorcer
+        $cropTop = 0
+        $cropBottom = 0
         $cropLeft = 0
         $cropRight = 1280
-        $boundsType = 2
+        $boundsType = 3
     }
 }
 
@@ -104,7 +116,7 @@ $sceneCollection = [ordered]@{
                         "name" = "Screen_Capture"
                         "source_uuid" = "c7484df6-1234-5678-90ab-cdef12345678"
                         "visible" = $true
-                        "locked" = $true
+                        "locked" = $false
                         "pos" = [ordered]@{ "x" = 0.0; "y" = 0.0 }
                         "crop_top" = $cropTop
                         "crop_bottom" = $cropBottom
