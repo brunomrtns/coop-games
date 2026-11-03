@@ -1,3 +1,11 @@
+# Garantir instancia unica (encerrar janelas antigas do painel que tenham ficado abertas)
+$currentPid = $PID
+Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe'" -ErrorAction SilentlyContinue | Where-Object {
+    $_.ProcessId -ne $currentPid -and $_.CommandLine -like "*painel_coop.ps1*"
+} | ForEach-Object {
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+}
+
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 

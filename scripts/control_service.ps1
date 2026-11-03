@@ -26,6 +26,9 @@ $vddXml = @"
       <width>1920</width>
       <height>1080</height>
       <refresh_rate>60</refresh_rate>
+      <refresh_rate>120</refresh_rate>
+      <refresh_rate>144</refresh_rate>
+      <refresh_rate>165</refresh_rate>
     </resolution>
   </resolutions>
   <options>
@@ -40,6 +43,8 @@ $vddXml = @"
 "@
 
 if ($Action -eq "disable") {
+    # Encerrar OBS caso ainda esteja aberto
+    Get-Process obs64 -ErrorAction SilentlyContinue | Stop-Process -Force
     pnputil /disable-device "ROOT\DISPLAY\0000"
     if (Test-Path "C:\Program Files\Sunshine\config\sunshine.conf") {
         Clear-Content -Path "C:\Program Files\Sunshine\config\sunshine.conf" -Force
@@ -47,7 +52,7 @@ if ($Action -eq "disable") {
     Set-Content -Path "C:\Program Files\Sunshine\config\apps.json" -Value $appsContent -Force -Encoding UTF8
     Restart-Service SunshineService -ErrorAction SilentlyContinue
 } elseif ($Action -eq "enable") {
-    # Garantir configuracao do VDD em 1080p exclusivo (sem 800x600)
+    # Garantir configuracao do VDD em 1080p com 60/165Hz (sem 800x600@30Hz que trava o DWM do Windows)
     Set-Content -Path "C:\VirtualDisplayDriver\vdd_settings.xml" -Value $vddXml -Force
     Set-Content -Path "C:\VirtualDisplayDriver\VirtualDisplayDriver\vdd_settings.xml" -Value $vddXml -Force
 
@@ -56,12 +61,13 @@ if ($Action -eq "disable") {
     # Aguardar o Windows detectar o novo monitor
     Start-Sleep -Seconds 2
     
-    # Tentar forcar resolucao para 1080p via DisplayConfig se disponivel
+    # Forcar resolucao 1920x1080 e taxa de atualizacao alta para sincronizar com o Odyssey G5 (165Hz)
     try {
         Import-Module DisplayConfig -ErrorAction SilentlyContinue
         $v = Get-DisplayInfo -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -like "*VDD*" -or $_.DisplayName -like "*Virtual*" }
         if ($v) {
             Set-DisplayResolution -DisplayId $v.DisplayId -Width 1920 -Height 1080 -ErrorAction SilentlyContinue
+            Set-DisplayRefreshRate -DisplayId $v.DisplayId -RefreshRate 60 -ErrorAction SilentlyContinue
         }
     } catch {}
 
