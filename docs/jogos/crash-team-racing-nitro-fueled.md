@@ -49,3 +49,11 @@ O Moonlight oficial do Android **só transmite deitado** (não tem opção de re
 - Use o **Artemis** (fork do Moonlight, `ClassicOldSong/moonlight-android` no GitHub), que funciona com o mesmo Sunshine.
 - Nas configurações do Artemis, ative o modo retrato / orientação automática.
 - Com o Moonlight oficial deitado, a imagem aparece inteira no centro, com faixas pretas nas laterais.
+
+## 4. Patch "Unlock Everything" (Pit Stop, Personagens, Karts e Skins)
+
+O patch ativa a flag nativa de desenvolvimento `CBuildData::_unlockAll` (a mesma das builds demo/kiosk de eventos), liberando tudo no jogo sem travar ou corromper.
+
+* **Arquivo:** `CTR-NitroFueled-PC-portable/patches/CrashTeamRacingUnlockAll.xml` (`isEnabled="true"`).
+* **Backup do Save:** Salvo em `user/savedata_backup_*`.
+* **Como Desativar:** Altere `isEnabled="true"` para `isEnabled="false"` no XML acima ou delete o arquivo.
